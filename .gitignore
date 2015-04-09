@@ -2,3 +2,5 @@
 *.pyc
 *.pyo
 secret/
+*.swp
+*.swo
