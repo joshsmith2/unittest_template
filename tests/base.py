@@ -6,7 +6,6 @@ class GeneralTest(unittest.TestCase):
     def setUp(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
 
-
     def tearDown(self):
         pass
 
