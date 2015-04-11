@@ -46,6 +46,8 @@ class Video:
             id=id,
             part='snippet').execute()
 
+        self.name = self.response['items'][0]['snippet']['title']
+
 #Not in git, for obvious reasons
 def get_api_key(api_key_file):
     api_key_file = os.path.abspath(api_key_file)
