@@ -3,6 +3,7 @@ import os
 import sys
 from oauth2client.client import SignedJwtAssertionCredentials
 from httplib2 import Http
+from datetime import datetime
 
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
@@ -47,6 +48,15 @@ class Video:
             part='snippet').execute()
 
         self.name = self.response['items'][0]['snippet']['title']
+        unicode_datetime = self.response['items'][0]['snippet']['publishedAt']
+        self.published_datetime_iso = unicode_datetime.encode('ascii')
+        published_datetime = datetime.strptime(self.published_datetime_iso,
+                                               "%Y-%m-%dT%H:%M:%S.%fZ")
+
+        date_format = "%Y/%m/%d"
+        time_format = "%H:%M:%S"
+        self.published_date = published_datetime.strftime(date_format)
+        self.published_time = published_datetime.strftime(time_format)
 
 #Not in git, for obvious reasons
 def get_api_key(api_key_file):
