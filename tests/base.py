@@ -13,6 +13,7 @@ class GeneralTest(unittest.TestCase):
 
     def setUp(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.leekspin_id = '1wnE4vF9CQ4'
 
     def tearDown(self):
         pass

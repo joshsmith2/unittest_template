@@ -1,15 +1,50 @@
 import apiclient
 import os
 import sys
+from oauth2client.client import SignedJwtAssertionCredentials
+from httplib2 import Http
 
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
+SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
+
+
+class AuthObject:
+    """
+    Either an OAuth2 token or public API key.
+    HALF BAKED
+    """
+    def __init__(self, type, credentials_file, client_email=None):
+        """
+        :param type: Credentials type - one of OAuth2 or Public
+        :param credentials_file:  File holding credentials
+        :param client_email: Optional. Required for OAuth2
+        """
+        self.type = type
+        self.credentials_file = credentials_file
+        self.client_email = client_email
+        if type == "OAuth2":
+            pass
+
 
 class Video:
-    def __init__(self, id, api_key):
-        self.service = apiclient.discovery.build('youtubeAnalytics', 'v1', api_key)
-        self.views = self.service.metrics().query(
-            id = id,
-            metrics = 'views').execute()
+    def __init__(self, id):
+        """
+        This is the object which will store all analytics data.
+        May (will) need refining.
+
+        :param id: Youtube id for the video to be examined
+        :param start_date: Start date in YYYY-MM-DD format
+        :param end_date: See start date
+        """
+        oauth_key_file = os.path.join(SECRETS_DIRECTORY, 'oauth_key.p12')
+        creds = get_oath_credentials(oauth_key_file)
+
+        self.http_auth = creds.authorize(Http())
+        self.service = apiclient.discovery.build('youtube', 'v3',
+                                                 http=self.http_auth)
+        self.response = self.service.videos().list(
+            id=id,
+            part='snippet').execute()
 
 #Not in git, for obvious reasons
 def get_api_key(api_key_file):
@@ -23,12 +58,30 @@ def get_api_key(api_key_file):
               "public API key in it. " % api_key_file
         sys.exit(1)
 
+def get_oath_credentials(key_file, client_email_file=None):
+    """
+    :param key_file: Contains OAuth2 private key, in .p12 format
+    :param client_email_file: Conatins client email (from Developers console)
+    :return: SignedJwtAssertionCredentials object
+
+    Help here from
+    https://developers.google.com/identity/protocols/OAuth2ServiceAccount
+    """
+
+    # Set default client_email file if not defined.
+    if not client_email_file:
+        client_email_file = os.path.join(SECRETS_DIRECTORY, 'client_email.txt')
+    with open(client_email_file, 'r') as f:
+        client_email = f.read()
+    with open(key_file, 'r') as f:
+        private_key = f.read()
+    credentials = SignedJwtAssertionCredentials(client_email, private_key,
+                 'https://www.googleapis.com/auth/youtube.readonly')
+    return credentials
 
 
 def main():
-    api_key = get_api_key(os.path.join(SOURCE_ROOT,
-                                       'secret',
-                                       'public_api_key.key'))
+    pass
 
 if __name__ == '__main__':
     main()
