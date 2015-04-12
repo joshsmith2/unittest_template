@@ -1,11 +1,5 @@
 from base import *
-try:
-    import public_api
-except ImportError:
-    import sys
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    sys.path.append(base_dir)
-    import public_api
+import subprocess as sp
 
 
 class AuthTest(GeneralTest):
@@ -24,12 +18,24 @@ class QueryTest(GeneralTest):
         leekspin = public_api.Video(self.leekspin_id)
         self.assertEqual(u'Leek Spin', leekspin.name)
 
+    def test_can_get_channel_name_from_id(self):
+        leekspin = public_api.Video(self.leekspin_id)
+        self.assertEqual(u'Xyliex', leekspin.channel_title)
+
     def test_can_get_video_published_time_and_date_in_multiple_formats(self):
         leekspin = public_api.Video(self.leekspin_id)
         self.assertEqual('2006-09-26T02:45:35.000Z',
                          leekspin.published_datetime_iso)
         self.assertEqual('2006/09/26', leekspin.published_date)
         self.assertEqual('02:45:35', leekspin.published_time)
+
+
+
+class InputTest(GeneralTest):
+
+    def test_can_get_help_when_running_script_from_cmd(self):
+        output = sp.check_output(self.minimal_command)
+        self.assertIn("show this help message and exit", output)
 
 if __name__ == '__main__':
      unittest.main()

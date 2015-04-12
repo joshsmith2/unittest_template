@@ -1,6 +1,9 @@
+#!/usr/bin/env python2.7
+
 import apiclient
 import os
 import sys
+import argparse
 from oauth2client.client import SignedJwtAssertionCredentials
 from httplib2 import Http
 from datetime import datetime
@@ -45,10 +48,11 @@ class Video:
                                                  http=self.http_auth)
         self.response = self.service.videos().list(
             id=id,
-            part='snippet').execute()
+            part='snippet, status').execute()
 
-        self.name = self.response['items'][0]['snippet']['title']
-        unicode_datetime = self.response['items'][0]['snippet']['publishedAt']
+        snippet = self.response['items'][0]['snippet']
+        self.name = snippet['title']
+        unicode_datetime = snippet['publishedAt']
         self.published_datetime_iso = unicode_datetime.encode('ascii')
         published_datetime = datetime.strptime(self.published_datetime_iso,
                                                "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -57,6 +61,7 @@ class Video:
         time_format = "%H:%M:%S"
         self.published_date = published_datetime.strftime(date_format)
         self.published_time = published_datetime.strftime(time_format)
+        self.channel_title = snippet['channelTitle']
 
 #Not in git, for obvious reasons
 def get_api_key(api_key_file):
@@ -91,9 +96,17 @@ def get_oath_credentials(key_file, client_email_file=None):
                  'https://www.googleapis.com/auth/youtube.readonly')
     return credentials
 
+def get_arguments():
+    blurb = "Returns a host of information concerning a youtube video, " \
+            "given its ID."
+    p = argparse.ArgumentParser(description=blurb)
+    p.add_argument('-i', '--id', metavar='STRING', dest="id",
+                   help="For single videos, the id of the video to retrieve"
+                        " stats for.")
+    return p.parse_args()
 
 def main():
-    pass
+    get_arguments()
 
 if __name__ == '__main__':
     main()

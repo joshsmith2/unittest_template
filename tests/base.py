@@ -14,6 +14,9 @@ class GeneralTest(unittest.TestCase):
     def setUp(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
         self.leekspin_id = '1wnE4vF9CQ4'
+        self.test_directory = os.path.dirname(os.path.realpath(__file__))
+        self.script = os.path.join(self.test_directory, '../public_api.py')
+        self.minimal_command = [self.script, '-h']
 
     def tearDown(self):
         pass
