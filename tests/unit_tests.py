@@ -29,7 +29,15 @@ class QueryTest(GeneralTest):
         self.assertEqual('2006/09/26', leekspin.published_date)
         self.assertEqual('02:45:35', leekspin.published_time)
 
-
+    def test_can_get_view_comment_favourite_statistics(self):
+        leekspin = public_api.Video(self.leekspin_id)
+        self.assertLessEqual(18150, leekspin.comment_count)
+        self.assertLessEqual(6475867, leekspin.view_count)
+        self.assertLessEqual(0, leekspin.favourite_count)
+        self.assertLessEqual(1120, leekspin.dislike_count)
+        self.assertLessEqual(31661, leekspin.like_count)
+        self.assertEqual(leekspin.like_count - leekspin.dislike_count,
+                         leekspin.approval)
 
 class InputTest(GeneralTest):
 

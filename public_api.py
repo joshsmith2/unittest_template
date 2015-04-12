@@ -48,20 +48,31 @@ class Video:
                                                  http=self.http_auth)
         self.response = self.service.videos().list(
             id=id,
-            part='snippet, status').execute()
+            part='snippet, statistics').execute()
 
         snippet = self.response['items'][0]['snippet']
+        statistics = self.response['items'][0]['statistics']
+
+        # Snippet data
         self.name = snippet['title']
         unicode_datetime = snippet['publishedAt']
         self.published_datetime_iso = unicode_datetime.encode('ascii')
         published_datetime = datetime.strptime(self.published_datetime_iso,
                                                "%Y-%m-%dT%H:%M:%S.%fZ")
-
         date_format = "%Y/%m/%d"
         time_format = "%H:%M:%S"
         self.published_date = published_datetime.strftime(date_format)
         self.published_time = published_datetime.strftime(time_format)
         self.channel_title = snippet['channelTitle']
+
+        # Statistics data
+        self.comment_count = int(statistics['commentCount'])
+        self.view_count = int(statistics['viewCount'])
+        self.favourite_count = int(statistics['favoriteCount'])
+        self.dislike_count = int(statistics['dislikeCount'])
+        self.like_count = int(statistics['likeCount'])
+        self.approval = self.like_count - self.dislike_count
+
 
 #Not in git, for obvious reasons
 def get_api_key(api_key_file):
