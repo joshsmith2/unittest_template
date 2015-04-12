@@ -11,27 +11,8 @@ from datetime import datetime
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
 
-
-class AuthObject:
-    """
-    Either an OAuth2 token or public API key.
-    HALF BAKED
-    """
-    def __init__(self, type, credentials_file, client_email=None):
-        """
-        :param type: Credentials type - one of OAuth2 or Public
-        :param credentials_file:  File holding credentials
-        :param client_email: Optional. Required for OAuth2
-        """
-        self.type = type
-        self.credentials_file = credentials_file
-        self.client_email = client_email
-        if type == "OAuth2":
-            pass
-
-
 class Video:
-    def __init__(self, id):
+    def __init__(self, api_response_item):
         """
         This is the object which will store all analytics data.
         May (will) need refining.
@@ -40,18 +21,10 @@ class Video:
         :param start_date: Start date in YYYY-MM-DD format
         :param end_date: See start date
         """
-        oauth_key_file = os.path.join(SECRETS_DIRECTORY, 'oauth_key.p12')
-        creds = get_oath_credentials(oauth_key_file)
 
-        self.http_auth = creds.authorize(Http())
-        self.service = apiclient.discovery.build('youtube', 'v3',
-                                                 http=self.http_auth)
-        self.response = self.service.videos().list(
-            id=id,
-            part='snippet, statistics').execute()
-
-        snippet = self.response['items'][0]['snippet']
-        statistics = self.response['items'][0]['statistics']
+        # Get data from response
+        snippet = api_response_item['snippet']
+        statistics = api_response_item['statistics']
 
         # Snippet data
         self.name = snippet['title']
@@ -64,6 +37,7 @@ class Video:
         self.published_date = published_datetime.strftime(date_format)
         self.published_time = published_datetime.strftime(time_format)
         self.channel_title = snippet['channelTitle']
+        self.description = snippet['description']
 
         # Statistics data
         self.comment_count = int(statistics['commentCount'])
@@ -73,6 +47,30 @@ class Video:
         self.like_count = int(statistics['likeCount'])
         self.approval = self.like_count - self.dislike_count
 
+def get_videos(video_ids):
+    videos = []
+    response = make_api_call(video_ids)
+    for item in response['items']:
+        videos.append(Video(item))
+    return videos
+
+def make_api_call(video_ids):
+    """
+    Given a list of Youtube video ids, make an API call to pull back data
+    concerning them
+
+    :param video_ids: List of ids as strings
+    :return: the API response
+    """
+    oauth_key_file = os.path.join(SECRETS_DIRECTORY, 'oauth_key.p12')
+    creds = get_oath_credentials(oauth_key_file)
+
+    http_auth = creds.authorize(Http())
+    service = apiclient.discovery.build('youtube', 'v3',
+                                             http=http_auth)
+    response = service.videos().list(id=','.join(video_ids),
+                                     part='snippet, statistics').execute()
+    return response
 
 #Not in git, for obvious reasons
 def get_api_key(api_key_file):
@@ -82,8 +80,8 @@ def get_api_key(api_key_file):
             api_key = key_file.readline().strip()
         return api_key
     except IOError: # File not found
-        print "%s does not exist - you need to create this yourself and put a " \
-              "public API key in it. " % api_key_file
+        print "%s does not exist - you need to create this yourself and " \
+              "put a public API key in it. " % api_key_file
         sys.exit(1)
 
 def get_oath_credentials(key_file, client_email_file=None):
