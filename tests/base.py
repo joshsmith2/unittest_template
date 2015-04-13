@@ -21,7 +21,8 @@ class GeneralTest(unittest.TestCase):
         self.test_directory = os.path.dirname(os.path.realpath(__file__))
         self.script = os.path.join(self.test_directory, '../public_api.py')
         self.output = os.path.join(self.test_directory, 'files', 'output.csv')
-
+        self.test_csv = os.path.join(self.current_dir, 'files',
+                                     'test_csv_in.csv')
         self.minimal_command = [self.script,
                                 '-i', self.leekspin_id,
                                 '-o', self.output]

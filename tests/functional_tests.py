@@ -30,9 +30,9 @@ class FunctionalTest(GeneralTest):
     def test_can_get_output_from_csv_file(self):
         # We have a single rowed file full of URLs, and we feed it to our
         # script.
-        csv_in = os.path.join(self.current_dir, 'files', 'test_csv_in.csv')
+
         sp.check_call([self.script,
-                       '-c', csv_in,
+                       '-c', self.test_csv,
                        '-o', self.output])
 
         # There's a file output...

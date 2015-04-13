@@ -11,6 +11,7 @@ from collections import OrderedDict
 import dict_unicode_writer
 import string
 import re
+import csv
 
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
@@ -78,13 +79,18 @@ def get_video_ids(url):
                                      # issue later
 
 def get_videos(video_ids):
+    """
+    Ties together the api call and video constructions to return a list of
+    video data from a list of video ids
+
+    :param video_ids: A list of video ids in string format
+    :return: A list of dictionaries, each containing a lot of video data
+    """
     videos = []
     response = make_api_call(video_ids)
     for item in response['items']:
         videos.append(build_video_dict(item))
     return videos
-
-
 
 def make_api_call(video_ids):
     """
@@ -141,12 +147,15 @@ def get_arguments():
     blurb = "Returns a host of information concerning a youtube video, " \
             "given its ID."
     p = argparse.ArgumentParser(description=blurb)
-    p.add_argument('-i', '--id', metavar='STRING', dest="id",
+    p.add_argument('-i', '--id', metavar='STRING', dest='id',
                    help="For single videos, the id of the video to retrieve"
                         " stats for.")
-    p.add_argument('-o', '--output-file', metavar='PATH', dest="output_file",
+    p.add_argument('-o', '--output-file', metavar='PATH', dest='output_file',
                    help="Path to a .csv file which will hold the output of " \
                         "this query.")
+    p.add_argument('-c', '--csv-in', metavar='PATH', dest='csv_in',
+                   help="Path to in .csv file containing a single row of "
+                        "Youtube URLS. Supports every URL I've seen so far.")
     return p.parse_args()
 
 def output_to_csv(videos, output_file):
@@ -165,8 +174,26 @@ def output_to_csv(videos, output_file):
         for video in videos:
             w.writerow(video)
 
+def get_ids_from_input_csv(input_file):
+    """
+    :param csv: Path to a csv file containing Youtube URLs
+    :return: A list of ids
+    """
+    ids = []
+    with open(input_file, 'rU') as input_file:
+        reader = csv.reader(input_file)
+        for row in reader:
+            video_id = get_video_ids(row[0])
+            ids.append(video_id)
+    return ids
+
 def main():
     args = get_arguments()
+    videos = []
+    if args.id:
+        videos.extend(get_videos([args.id]))
+
+
     output_to_csv(get_videos([args.id]), args.output_file)
 
 if __name__ == '__main__':
