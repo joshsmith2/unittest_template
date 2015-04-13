@@ -184,17 +184,21 @@ def get_ids_from_input_csv(input_file):
         reader = csv.reader(input_file)
         for row in reader:
             video_id = get_video_ids(row[0])
-            ids.append(video_id)
+            if video_id:
+                ids.append(video_id)
     return ids
 
 def main():
     args = get_arguments()
     videos = []
     if args.id:
-        videos.extend(get_videos([args.id]))
-
-
-    output_to_csv(get_videos([args.id]), args.output_file)
+        specified_id_video = get_videos([args.id])
+        videos.extend(specified_id_video)
+    if args.csv_in:
+        csv_ids = get_ids_from_input_csv(args.csv_in)
+        csv_videos = get_videos(csv_ids)
+        videos.extend(csv_videos)
+    output_to_csv(videos, args.output_file)
 
 if __name__ == '__main__':
     main()

@@ -47,10 +47,9 @@ class IdTest(GeneralTest):
         self.assertEqual([None, None], returned)
 
     def test_can_get_ids_from_input_csv(self):
-        expected = ['cZaGMKQ8-s4', '_dUwSshAz3Q', None, '1UkpzUdwpYY']
+        expected = ['cZaGMKQ8-s4', '_dUwSshAz3Q', '1UkpzUdwpYY']
         result = public_api.get_ids_from_input_csv(self.test_csv)
         self.assertEqual(expected, result)
-
 
 if __name__ == '__main__':
      unittest.main()

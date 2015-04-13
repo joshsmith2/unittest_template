@@ -51,8 +51,8 @@ class FunctionalTest(GeneralTest):
         names = ['George Galloway MP on Chilcot Inquiry Delays',
                  'Parliamentary Debate on Epilepsy - 26th February',
                  "Forced Marriage - It's Never OK."]
-        for name in names:
-            self.assertIn(name, results)
+        for i, name in enumerate(names):
+            self.assertIn(name, results[i])
 
 if __name__ == '__main__':
      unittest.main()
