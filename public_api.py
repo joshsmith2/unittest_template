@@ -41,7 +41,7 @@ def build_video_dict(api_response_item):
     video['published_datetime_iso'] = published_datetime_iso
     published_datetime = datetime.strptime(published_datetime_iso,
                                            "%Y-%m-%dT%H:%M:%S.%fZ")
-    video['published_datetime'] = str('published_datetime')
+    video['published_datetime'] = str(published_datetime)
     date_format = "%d/%m/%Y"
     time_format = "%H:%M:%S"
     video['published_date'] = published_datetime.strftime(date_format)
@@ -106,6 +106,7 @@ def make_api_call(video_ids):
     http_auth = creds.authorize(Http())
     service = apiclient.discovery.build('youtube', 'v3',
                                          http=http_auth)
+
     response = service.videos().list(id=','.join(video_ids),
                                      part='snippet, statistics').execute()
     return response
@@ -188,6 +189,15 @@ def get_ids_from_input_csv(input_file):
                 ids.append(video_id)
     return ids
 
+def chunks(l, n):
+    """ Yield successive n-sized chunks from l.
+
+    From http://stackoverflow.com/questions/312443/
+    how-do-you-split-a-list-into-evenly-sized-chunks-in-python
+    """
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+
 def main():
     args = get_arguments()
     videos = []
@@ -196,8 +206,11 @@ def main():
         videos.extend(specified_id_video)
     if args.csv_in:
         csv_ids = get_ids_from_input_csv(args.csv_in)
-        csv_videos = get_videos(csv_ids)
-        videos.extend(csv_videos)
+        # Cut the videos up into chunks of 50, to avoid limits on HTTP requests
+        generated_csv_chunks = chunks(csv_ids, 50)
+        for g in generated_csv_chunks:
+            csv_videos = get_videos(g)
+            videos.extend(csv_videos)
     output_to_csv(videos, args.output_file)
 
 if __name__ == '__main__':
