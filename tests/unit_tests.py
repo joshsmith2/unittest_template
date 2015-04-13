@@ -13,6 +13,10 @@ class QueryTest(GeneralTest):
         response = public_api.make_api_call(self.leekspin_id)
         self.assertNotEqual(response, '')
 
+    def test_id_in_response(self):
+        leekspin = public_api.get_videos([self.leekspin_id])[0]
+        self.assertEqual(self.leekspin_id, leekspin['id'])
+
     def test_can_get_video_name_from_id(self):
         leekspin = public_api.get_videos([self.leekspin_id])[0]
         self.assertEqual(u'Leek Spin', leekspin['name'])

@@ -26,9 +26,11 @@ def build_video_dict(api_response_item):
     # Get data from response
     snippet = api_response_item['snippet']
     statistics = api_response_item['statistics']
+    video['id'] = api_response_item['id']
 
     # Snippet data
     video['name'] = snippet['title']
+
     video['channel_title'] = snippet['channelTitle']
     video['description'] = snippet['description']
     unicode_datetime = snippet['publishedAt']
