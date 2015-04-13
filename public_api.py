@@ -9,6 +9,7 @@ from httplib2 import Http
 from datetime import datetime
 from csv import DictWriter
 from collections import OrderedDict
+import dict_unicode_writer
 
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
@@ -32,14 +33,14 @@ def build_video_dict(api_response_item):
     video['name'] = snippet['title']
 
     video['channel_title'] = snippet['channelTitle']
-    video['description'] = snippet['description']
-    unicode_datetime = snippet['publishedAt']
-    published_datetime_iso = unicode_datetime.encode('ascii')
+    trimmed_desc = snippet['description'].replace('\n',' ').replace('\r', ' ')
+    video['description'] = trimmed_desc
+    published_datetime_iso = snippet['publishedAt']
     video['published_datetime_iso'] = published_datetime_iso
     published_datetime = datetime.strptime(published_datetime_iso,
                                            "%Y-%m-%dT%H:%M:%S.%fZ")
-    video['published_datetime'] = published_datetime
-    date_format = "%Y/%m/%d"
+    video['published_datetime'] = str('published_datetime')
+    date_format = "%d/%m/%Y"
     time_format = "%H:%M:%S"
     video['published_date'] = published_datetime.strftime(date_format)
     video['published_time'] = published_datetime.strftime(time_format)
@@ -134,7 +135,7 @@ def output_to_csv(videos, output_file):
         except IndexError:
             print "No videos passed to output_to_csv"
             return
-        w = DictWriter(o_f, fieldnames=fieldnames)
+        w = dict_unicode_writer.DictUnicodeWriter(o_f, fieldnames=fieldnames)
         w.writeheader()
         for video in videos:
             w.writerow(video)

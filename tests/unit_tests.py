@@ -36,7 +36,7 @@ class QueryTest(GeneralTest):
         leekspin = public_api.get_videos([self.leekspin_id])[0]
         self.assertEqual('2006-09-26T02:45:35.000Z',
                          leekspin['published_datetime_iso'])
-        self.assertEqual('2006/09/26', leekspin['published_date'])
+        self.assertEqual('26/09/2006', leekspin['published_date'])
         self.assertEqual('02:45:35', leekspin['published_time'])
 
     def test_can_get_view_comment_favourite_statistics(self):
@@ -68,6 +68,11 @@ class OutputTest(GeneralTest):
         leekspin = public_api.get_videos([self.leekspin_id])
         public_api.output_to_csv(leekspin, self.output)
         self.assertTrue(os.path.exists(self.output))
+
+    def test_unicode_not_a_problem(self):
+        dummy_vid = {'name': u'\u2019'}
+        public_api.output_to_csv([dummy_vid], self.output)
+
 
 if __name__ == '__main__':
      unittest.main()
