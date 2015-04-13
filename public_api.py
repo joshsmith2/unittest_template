@@ -7,6 +7,7 @@ import argparse
 from oauth2client.client import SignedJwtAssertionCredentials
 from httplib2 import Http
 from datetime import datetime
+from csv import DictWriter
 
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
@@ -123,11 +124,20 @@ def get_arguments():
                         "this query.")
     return p.parse_args()
 
-def output_to_csv(videos):
+def output_to_csv(videos, output_file):
     """
     :param videos: A list of videos to print to a .csv file
     """
-
+    with open(output_file, 'w') as o_f:
+        try:
+            fieldnames = videos[0].keys()
+        except IndexError:
+            print "No videos passed to output_to_csv"
+            return
+        w = DictWriter(o_f, fieldnames=fieldnames)
+        w.writeheader()
+        for video in videos:
+            w.writerow(video)
 
 def main():
     args = get_arguments()

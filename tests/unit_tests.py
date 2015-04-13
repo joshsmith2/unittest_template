@@ -58,5 +58,12 @@ class InputTest(GeneralTest):
         output = sp.check_output([self.script, '-h'])
         self.assertIn("show this help message and exit", output)
 
+class OutputTest(GeneralTest):
+
+    def test_a_csv_file_can_be_output(self):
+        leekspin = public_api.get_videos([self.leekspin_id])
+        public_api.output_to_csv(leekspin, self.output)
+        self.assertTrue(os.path.exists(self.output))
+
 if __name__ == '__main__':
      unittest.main()
