@@ -8,6 +8,7 @@ from oauth2client.client import SignedJwtAssertionCredentials
 from httplib2 import Http
 from datetime import datetime
 from csv import DictWriter
+from collections import OrderedDict
 
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
@@ -20,7 +21,7 @@ def build_video_dict(api_response_item):
     :param api_response_item: The output from a call to get_api_output
                               for one or more videos.
     """
-    video = {}
+    video = OrderedDict()
 
     # Get data from response
     snippet = api_response_item['snippet']
@@ -31,7 +32,6 @@ def build_video_dict(api_response_item):
     video['channel_title'] = snippet['channelTitle']
     video['description'] = snippet['description']
     unicode_datetime = snippet['publishedAt']
-    video['unicode_datetime'] = unicode_datetime
     published_datetime_iso = unicode_datetime.encode('ascii')
     video['published_datetime_iso'] = published_datetime_iso
     published_datetime = datetime.strptime(published_datetime_iso,
@@ -51,8 +51,6 @@ def build_video_dict(api_response_item):
     video['approval'] = video['like_count'] - video['dislike_count']
 
     return video
-
-
 
 def get_videos(video_ids):
     videos = []
