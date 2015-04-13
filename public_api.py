@@ -141,7 +141,7 @@ def output_to_csv(videos, output_file):
 
 def main():
     args = get_arguments()
-
+    output_to_csv(get_videos([args.id]), args.output_file)
 
 if __name__ == '__main__':
     main()
