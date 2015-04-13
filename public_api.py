@@ -7,9 +7,10 @@ import argparse
 from oauth2client.client import SignedJwtAssertionCredentials
 from httplib2 import Http
 from datetime import datetime
-from csv import DictWriter
 from collections import OrderedDict
 import dict_unicode_writer
+import string
+import re
 
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
@@ -55,12 +56,35 @@ def build_video_dict(api_response_item):
 
     return video
 
+def get_video_ids(url):
+    """
+    Given a Youtube url, return the id. This will probably need much tweaking
+    as new formats are discovered
+
+    :param url: Youtube URL in question, in any format
+    :return: Youtube id as a string
+    """
+    # This string concocted to avoid matches with channels and lists, which
+    # have longer ids at present.
+    video_regex = "(?:v=|vi=)?(?:[^0-9A-Za-z]|\\b)" \
+                  "(?P<id>[0-9A-Za-z_-]{11}(?![0-9A-Za-z]))"
+    split_characters = '/?,&'
+    translation = string.maketrans(split_characters, ' '*len(split_characters))
+    split_url = string.translate(url, translation).split()
+    for element in split_url:
+        match = re.match(video_regex, element)
+        if match:
+            return match.group('id') # Returns first found. Might be an
+                                     # issue later
+
 def get_videos(video_ids):
     videos = []
     response = make_api_call(video_ids)
     for item in response['items']:
         videos.append(build_video_dict(item))
     return videos
+
+
 
 def make_api_call(video_ids):
     """
@@ -75,7 +99,7 @@ def make_api_call(video_ids):
 
     http_auth = creds.authorize(Http())
     service = apiclient.discovery.build('youtube', 'v3',
-                                             http=http_auth)
+                                         http=http_auth)
     response = service.videos().list(id=','.join(video_ids),
                                      part='snippet, statistics').execute()
     return response
@@ -130,6 +154,7 @@ def output_to_csv(videos, output_file):
     :param videos: A list of videos to print to a .csv file
     """
     with open(output_file, 'w') as o_f:
+        # BOM (optional...Excel needs it to open UTF-8 file properly)
         try:
             fieldnames = videos[0].keys()
         except IndexError:

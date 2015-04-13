@@ -7,54 +7,6 @@ class AuthTest(GeneralTest):
         key = public_api.get_api_key('./files/dummy_api_key')
         self.assertEqual('FFFFFFFFI8005cfn4Mhhhhhhhh2WI5m11114090', key)
 
-class QueryTest(GeneralTest):
-
-    def test_api_call_gets_a_response(self):
-        response = public_api.make_api_call(self.leekspin_id)
-        self.assertNotEqual(response, '')
-
-    def test_id_in_response(self):
-        leekspin = public_api.get_videos([self.leekspin_id])[0]
-        self.assertEqual(self.leekspin_id, leekspin['id'])
-
-    def test_can_get_video_name_from_id(self):
-        leekspin = public_api.get_videos([self.leekspin_id])[0]
-        self.assertEqual(u'Leek Spin', leekspin['name'])
-
-    def test_can_get_channel_name_from_id(self):
-        leekspin = public_api.get_videos([self.leekspin_id])[0]
-        self.assertEqual(u'Xyliex', leekspin['channel_title'])
-
-    def test_can_get_channel_description_from_id(self):
-        leekspin = public_api.get_videos([self.leekspin_id])[0]
-        description = u"Inoue from Bleach spinning a leek with my best" \
-                      " attempt at editing the original song: Loituma - " \
-                      "Ievan polkka (Ieva's Polka)."
-        self.assertEqual(description, leekspin['description'])
-
-    def test_can_get_video_published_time_and_date_in_multiple_formats(self):
-        leekspin = public_api.get_videos([self.leekspin_id])[0]
-        self.assertEqual('2006-09-26T02:45:35.000Z',
-                         leekspin['published_datetime_iso'])
-        self.assertEqual('26/09/2006', leekspin['published_date'])
-        self.assertEqual('02:45:35', leekspin['published_time'])
-
-    def test_can_get_view_comment_favourite_statistics(self):
-        leekspin = public_api.get_videos([self.leekspin_id])[0]
-        self.assertLessEqual(18150, leekspin['comment_count'])
-        self.assertLessEqual(6475867, leekspin['view_count'])
-        self.assertLessEqual(0, leekspin['favourite_count'])
-        self.assertLessEqual(1120, leekspin['dislike_count'])
-        self.assertLessEqual(31661, leekspin['like_count'])
-        self.assertEqual(leekspin['like_count'] - leekspin['dislike_count'],
-                         leekspin['approval'])
-
-    def test_can_pass_multiple_ids_to_function(self):
-        green_title = u'Change The Tune - Green Party 2015 Election Broadcast'
-        videos = public_api.get_videos([self.leekspin_id, self.green_id])
-        self.assertEqual(len(videos), 2)
-        self.assertEqual([v['name'] for v in videos], [u'Leek Spin', green_title])
-
 
 class InputTest(GeneralTest):
 
@@ -73,6 +25,26 @@ class OutputTest(GeneralTest):
         dummy_vid = {'name': u'\u2019'}
         public_api.output_to_csv([dummy_vid], self.output)
 
+class IdTest(GeneralTest):
+
+    def test_can_get_proper_id_from_url(self):
+        urls = ['https://www.youtube.com/watch?v=X9EbKV5yWMk',
+                'https://www.youtube.com/watch?v=xy0GPL0s1vg&feature=youtu.be',
+                'https://www.youtube.com/watch?v=y9C3Nj8qknk, http://www.sadiqkhan.org.uk/harrow_east',
+                'https://youtu.be/1FDy0y8cPcY',
+                'https://youtu.be/d2JVKeOExEE?t=46m36s',
+                'http://youtube.com/watch?vi=dQw4w9WgXcQ&feature=youtube_gdata_player',
+                'http://youtube.com/v/dQw4w9WgXcQ?feature=youtube_gdata_player']
+        ids = ['X9EbKV5yWMk', 'xy0GPL0s1vg', 'y9C3Nj8qknk', '1FDy0y8cPcY',
+               'd2JVKeOExEE', 'dQw4w9WgXcQ', 'dQw4w9WgXcQ']
+        returned = [public_api.get_video_ids(url) for url in urls]
+        self.assertEqual(returned, ids)
+
+    def test_do_not_match_lists_or_channels(self):
+        urls = ['https://www.youtube.com/playlist?list=PLeJ0kwUqFJGCHG_mEjC4M9EH1YhLqkSlr',
+                'https://www.youtube.com/channel/UCg8AmXrkMhrwtqbkzSgfBDw']
+        returned = [public_api.get_video_ids(url) for url in urls]
+        self.assertEqual([None, None], returned)
 
 if __name__ == '__main__':
      unittest.main()

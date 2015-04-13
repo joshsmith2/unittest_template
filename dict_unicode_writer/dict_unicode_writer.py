@@ -31,7 +31,6 @@ class DictUnicodeWriter(object):
         return return_val
 
     def writerow(self, D):
-
         self.writer.writerow({k:self.decode(v) for k,v in D.items()})
         # Fetch UTF-8 output from the queue ...
         data = self.queue.getvalue()
