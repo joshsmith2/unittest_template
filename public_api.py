@@ -11,47 +11,53 @@ from datetime import datetime
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
 
-class Video:
-    def __init__(self, api_response_item):
-        """
-        This is the object which will store all analytics data.
-        May (will) need refining.
+def build_video_dict(api_response_item):
+    """
+    This is the dictionary which will store all analytics data.
+    May (will) need refining.
 
-        :param id: Youtube id for the video to be examined
-        :param start_date: Start date in YYYY-MM-DD format
-        :param end_date: See start date
-        """
+    :param api_response_item: The output from a call to get_api_output
+                              for one or more videos.
+    """
+    video = {}
 
-        # Get data from response
-        snippet = api_response_item['snippet']
-        statistics = api_response_item['statistics']
+    # Get data from response
+    snippet = api_response_item['snippet']
+    statistics = api_response_item['statistics']
 
-        # Snippet data
-        self.name = snippet['title']
-        unicode_datetime = snippet['publishedAt']
-        self.published_datetime_iso = unicode_datetime.encode('ascii')
-        published_datetime = datetime.strptime(self.published_datetime_iso,
-                                               "%Y-%m-%dT%H:%M:%S.%fZ")
-        date_format = "%Y/%m/%d"
-        time_format = "%H:%M:%S"
-        self.published_date = published_datetime.strftime(date_format)
-        self.published_time = published_datetime.strftime(time_format)
-        self.channel_title = snippet['channelTitle']
-        self.description = snippet['description']
+    # Snippet data
+    video['name'] = snippet['title']
+    video['channel_title'] = snippet['channelTitle']
+    video['description'] = snippet['description']
+    unicode_datetime = snippet['publishedAt']
+    video['unicode_datetime'] = unicode_datetime
+    published_datetime_iso = unicode_datetime.encode('ascii')
+    video['published_datetime_iso'] = published_datetime_iso
+    published_datetime = datetime.strptime(published_datetime_iso,
+                                           "%Y-%m-%dT%H:%M:%S.%fZ")
+    video['published_datetime'] = published_datetime
+    date_format = "%Y/%m/%d"
+    time_format = "%H:%M:%S"
+    video['published_date'] = published_datetime.strftime(date_format)
+    video['published_time'] = published_datetime.strftime(time_format)
 
-        # Statistics data
-        self.comment_count = int(statistics['commentCount'])
-        self.view_count = int(statistics['viewCount'])
-        self.favourite_count = int(statistics['favoriteCount'])
-        self.dislike_count = int(statistics['dislikeCount'])
-        self.like_count = int(statistics['likeCount'])
-        self.approval = self.like_count - self.dislike_count
+    # Statistics data
+    video['comment_count'] = int(statistics['commentCount'])
+    video['view_count'] = int(statistics['viewCount'])
+    video['favourite_count'] = int(statistics['favoriteCount'])
+    video['dislike_count'] = int(statistics['dislikeCount'])
+    video['like_count'] = int(statistics['likeCount'])
+    video['approval'] = video['like_count'] - video['dislike_count']
+
+    return video
+
+
 
 def get_videos(video_ids):
     videos = []
     response = make_api_call(video_ids)
     for item in response['items']:
-        videos.append(Video(item))
+        videos.append(build_video_dict(item))
     return videos
 
 def make_api_call(video_ids):
@@ -112,10 +118,20 @@ def get_arguments():
     p.add_argument('-i', '--id', metavar='STRING', dest="id",
                    help="For single videos, the id of the video to retrieve"
                         " stats for.")
+    p.add_argument('-o', '--output-file', metavar='PATH', dest="output_file",
+                   help="Path to a .csv file which will hold the output of " \
+                        "this query.")
     return p.parse_args()
 
+def output_to_csv(videos):
+    """
+    :param videos: A list of videos to print to a .csv file
+    """
+
+
 def main():
-    get_arguments()
+    args = get_arguments()
+
 
 if __name__ == '__main__':
     main()
