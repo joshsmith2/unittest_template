@@ -86,25 +86,26 @@ def build_video_dict(api_response_item):
 
     # Comment data
     recent_comments = get_most_recent_comments(video['id'])
-    most_liked_comment = sort_comments_by_likes(recent_comments)[0]['snippet']
-    comment_inner = most_liked_comment['topLevelComment']['snippet']
+    if recent_comments['items']: # If there are any comments, print their data
+        most_liked_comment = sort_comments_by_likes(recent_comments)[0]['snippet']
+        comment_inner = most_liked_comment['topLevelComment']['snippet']
 
-    video['recent_liked_comment'] = comment_inner['textDisplay']
-    video['recent_liked_comment_author'] = comment_inner['authorDisplayName']
-    video['recent_liked_comment_like_count'] = comment_inner['likeCount']
-    video['recent_liked_comment_reply_count'] = most_liked_comment['totalReplyCount']
-    t = str(parse_iso_datetime(comment_inner['publishedAt']))
-    video['recent_liked_comment_time'] = t
+        video['recent_liked_comment'] = comment_inner['textDisplay']
+        video['recent_liked_comment_author'] = comment_inner['authorDisplayName']
+        video['recent_liked_comment_like_count'] = comment_inner['likeCount']
+        video['recent_liked_comment_reply_count'] = most_liked_comment['totalReplyCount']
+        t = str(parse_iso_datetime(comment_inner['publishedAt']))
+        video['recent_liked_comment_time'] = t
 
-    most_replied_to_comment = sort_comments_by_replies(recent_comments)[0]['snippet']
-    comment_inner = most_replied_to_comment['topLevelComment']['snippet']
+        most_replied_to_comment = sort_comments_by_replies(recent_comments)[0]['snippet']
+        comment_inner = most_replied_to_comment['topLevelComment']['snippet']
 
-    video['recent_replied_to_comment'] = comment_inner['textDisplay']
-    video['recent_replied_to_comment_author'] = comment_inner['authorDisplayName']
-    video['recent_replied_to_comment_like_count'] = comment_inner['likeCount']
-    video['recent_replied_to_comment_reply_count'] = most_replied_to_comment['totalReplyCount']
-    t = str(parse_iso_datetime(comment_inner['publishedAt']))
-    video['recent_replied_to_comment_time'] = t
+        video['recent_replied_to_comment'] = comment_inner['textDisplay']
+        video['recent_replied_to_comment_author'] = comment_inner['authorDisplayName']
+        video['recent_replied_to_comment_like_count'] = comment_inner['likeCount']
+        video['recent_replied_to_comment_reply_count'] = most_replied_to_comment['totalReplyCount']
+        t = str(parse_iso_datetime(comment_inner['publishedAt']))
+        video['recent_replied_to_comment_time'] = t
 
     return video
 

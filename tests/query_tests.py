@@ -80,5 +80,12 @@ class CommentsTest(GeneralTest):
                             msg=message)
             reply_count_to_lose_to = public_api.reply_count(c)
 
+    def test_none_of_this_breaks_if_a_video_has_no_attention(self):
+        # Not meant to error
+        comments = public_api.get_most_recent_comments(self.big_dog_id, 20)
+        self.assertEqual(comments['items'], [])
+        video = public_api.get_videos([self.big_dog_id])
+        public_api.output_to_csv(video, self.output)
+
 if __name__ == '__main__':
      unittest.main()
