@@ -2,10 +2,6 @@ from base import *
 
 class QueryTest(GeneralTest):
 
-    def test_api_call_gets_a_response(self):
-        response = public_api.make_api_call(self.leekspin_id)
-        self.assertNotEqual(response, '')
-
     def test_id_in_response(self):
         leekspin = public_api.get_videos([self.leekspin_id])[0]
         self.assertEqual(self.leekspin_id, leekspin['id'])
@@ -47,6 +43,16 @@ class QueryTest(GeneralTest):
         videos = public_api.get_videos([self.leekspin_id, self.green_id])
         self.assertEqual(len(videos), 2)
         self.assertEqual([v['name'] for v in videos], [u'Leek Spin', green_title])
+
+class CommentsTest(GeneralTest):
+
+    def test_can_get_n_comments(self):
+        returned = public_api.get_most_recent_comments(self.green_id, 69)
+        self.assertEqual(len(returned['items']), 68)
+
+    def test_asking_for_more_than_100_comments_fails(self):
+        with self.assertRaises(ValueError):
+            public_api.get_most_recent_comments(self.green_id, 400)
 
 if __name__ == '__main__':
      unittest.main()

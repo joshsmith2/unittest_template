@@ -16,6 +16,28 @@ import csv
 SOURCE_ROOT = os.path.dirname(os.path.realpath(__file__))
 SECRETS_DIRECTORY = os.path.join(SOURCE_ROOT, 'secret')
 
+class ApiService:
+    def __init__(self, key_type='oauth'):
+        """
+        param: key_type: One of 'oauth' or 'api'
+        """
+
+        if key_type == 'oauth':
+            oauth_key_file = os.path.join(SECRETS_DIRECTORY, 'oauth_key.p12')
+            creds = get_oath_credentials(oauth_key_file)
+            http_auth = creds.authorize(Http())
+            service = apiclient.discovery.build('youtube', 'v3',
+                                                http=http_auth)
+        elif key_type == 'api':
+            public_api_key = get_api_key()
+            service = apiclient.discovery.build('youtube', 'v3',
+                                                 developerKey=public_api_key)
+
+        else:
+            raise ValueError("Key type not known. Must be one of 'oauth'"
+                             "or 'api'")
+        self.service = service
+
 def build_video_dict(api_response_item):
     """
     This is the dictionary which will store all analytics data.
@@ -87,32 +109,33 @@ def get_videos(video_ids):
     :return: A list of dictionaries, each containing a lot of video data
     """
     videos = []
-    response = make_api_call(video_ids)
-    for item in response['items']:
+    api_service = ApiService().service
+    vid_list_response = api_service.videos().list(id=','.join(video_ids),
+                                                  part='snippet,'
+                                                       'statistics').execute()
+    for item in vid_list_response['items']:
         videos.append(build_video_dict(item))
     return videos
 
-def make_api_call(video_ids):
+def get_most_recent_comments(video_id, count=100):
     """
-    Given a list of Youtube video ids, make an API call to pull back data
-    concerning them
+    Return the first count comments from a video
 
-    :param video_ids: List of ids as strings
-    :return: the API response
+    :param video_id: Id of video as string
+    :param count: Number of comments to return as int. Currently needs to be between
+                  0 and 100 due to Youtube data API restrictions
+    :return: A list of comments, unadulterated
     """
-    oauth_key_file = os.path.join(SECRETS_DIRECTORY, 'oauth_key.p12')
-    creds = get_oath_credentials(oauth_key_file)
-
-    http_auth = creds.authorize(Http())
-    service = apiclient.discovery.build('youtube', 'v3',
-                                         http=http_auth)
-
-    response = service.videos().list(id=','.join(video_ids),
-                                     part='snippet, statistics').execute()
-    return response
+    if count > 100 or count < 0:
+        raise ValueError("Count must be between 0 and 100")
+    api_service = ApiService(key_type='api').service
+    return api_service.commentThreads().list(videoId=video_id,
+                                             part='snippet',
+                                             maxResults=count).execute()
 
 #Not in git, for obvious reasons
-def get_api_key(api_key_file):
+def get_api_key(api_key_file=os.path.join(SECRETS_DIRECTORY,
+                                          'public_api_key.key')):
     api_key_file = os.path.abspath(api_key_file)
     try:
         with open(api_key_file, 'r') as key_file:
