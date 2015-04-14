@@ -6,6 +6,10 @@ class QueryTest(GeneralTest):
         leekspin = public_api.get_videos([self.leekspin_id])[0]
         self.assertEqual(self.leekspin_id, leekspin['id'])
 
+    def test_link_in_response(self):
+        leekspin = public_api.get_videos([self.leekspin_id])[0]
+        self.assertEqual("youtu.be/" + self.leekspin_id, leekspin['link'])
+
     def test_can_get_video_name_from_id(self):
         leekspin = public_api.get_videos([self.leekspin_id])[0]
         self.assertEqual(u'Leek Spin', leekspin['name'])
@@ -48,11 +52,24 @@ class CommentsTest(GeneralTest):
 
     def test_can_get_n_comments(self):
         returned = public_api.get_most_recent_comments(self.green_id, 69)
-        self.assertEqual(len(returned['items']), 68)
+        self.assertEqual(len(returned['items']), 69)
 
     def test_asking_for_more_than_100_comments_fails(self):
         with self.assertRaises(ValueError):
             public_api.get_most_recent_comments(self.green_id, 400)
+
+    def test_sorting_works(self):
+        response = public_api.get_most_recent_comments(self.leekspin_id, 20)
+        sorted_comments = public_api.sort_comments_by_likes(response)
+        like_count_to_lose_to = public_api.like_count(sorted_comments[0])
+        for c in sorted_comments:
+            message = "{} not less than {}".format(public_api.like_count(c),
+                                                   like_count_to_lose_to)
+            self.assertTrue(public_api.like_count(c) <= like_count_to_lose_to,
+                            msg=message)
+            like_count_to_lose_to = public_api.like_count(c)
+
+
 
 if __name__ == '__main__':
      unittest.main()

@@ -38,6 +38,13 @@ class ApiService:
                              "or 'api'")
         self.service = service
 
+def parse_iso_datetime(time_to_convert):
+    """
+    :param time_to_convert: An iso datetime returned by google
+    :return: A datetime object
+    """
+    return datetime.strptime(time_to_convert,"%Y-%m-%dT%H:%M:%S.%fZ")
+
 def build_video_dict(api_response_item):
     """
     This is the dictionary which will store all analytics data.
@@ -52,6 +59,7 @@ def build_video_dict(api_response_item):
     snippet = api_response_item['snippet']
     statistics = api_response_item['statistics']
     video['id'] = api_response_item['id']
+    video['link'] = "youtu.be/" + str(video['id'])
 
     # Snippet data
     video['name'] = snippet['title']
@@ -61,8 +69,7 @@ def build_video_dict(api_response_item):
     video['description'] = trimmed_desc
     published_datetime_iso = snippet['publishedAt']
     video['published_datetime_iso'] = published_datetime_iso
-    published_datetime = datetime.strptime(published_datetime_iso,
-                                           "%Y-%m-%dT%H:%M:%S.%fZ")
+    published_datetime = parse_iso_datetime(published_datetime_iso)
     video['published_datetime'] = str(published_datetime)
     date_format = "%d/%m/%Y"
     time_format = "%H:%M:%S"
@@ -76,6 +83,18 @@ def build_video_dict(api_response_item):
     video['dislike_count'] = int(statistics['dislikeCount'])
     video['like_count'] = int(statistics['likeCount'])
     video['approval'] = video['like_count'] - video['dislike_count']
+
+    # Comment data
+    recent_comments = get_most_recent_comments(video['id'])
+    most_liked_comment = sort_comments_by_likes(recent_comments)[0]['snippet']
+    comment_inner = most_liked_comment['topLevelComment']['snippet']
+
+    video['recent_liked_comment'] = comment_inner['textDisplay']
+    video['recent_liked_comment_author'] = comment_inner['authorDisplayName']
+    video['recent_liked_comment_like_count'] = comment_inner['likeCount']
+    video['recent_liked_comment_reply_count'] = most_liked_comment['totalReplyCount']
+    t = str(parse_iso_datetime(comment_inner['publishedAt']))
+    video['recent_liked_comment_time'] = t
 
     return video
 
@@ -132,6 +151,29 @@ def get_most_recent_comments(video_id, count=100):
     return api_service.commentThreads().list(videoId=video_id,
                                              part='snippet',
                                              maxResults=count).execute()
+
+def like_count(comment):
+    return comment['snippet']['topLevelComment']['snippet']['likeCount']
+
+def sort_comments_by_likes(comments):
+    """
+    From a list of comment, get the most liked one
+
+    :param comments: A list of comments, from get_most_recent_comments
+    :return: All data for the single most liked comment
+    """
+
+    unsorted_comments = comments['items']
+    return sorted(unsorted_comments, key=lambda c: like_count(c), reverse=True)
+
+def sort_comments_by_replies(comments):
+    """
+    From a list of comment, get the most replied_to one
+
+    :param comments: A list of comments, from get_most_recent_comments
+    :return: All data for the single most replied_to comment
+    """
+    pass
 
 #Not in git, for obvious reasons
 def get_api_key(api_key_file=os.path.join(SECRETS_DIRECTORY,
