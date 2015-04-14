@@ -96,6 +96,16 @@ def build_video_dict(api_response_item):
     t = str(parse_iso_datetime(comment_inner['publishedAt']))
     video['recent_liked_comment_time'] = t
 
+    most_replied_to_comment = sort_comments_by_replies(recent_comments)[0]['snippet']
+    comment_inner = most_replied_to_comment['topLevelComment']['snippet']
+
+    video['recent_replied_to_comment'] = comment_inner['textDisplay']
+    video['recent_replied_to_comment_author'] = comment_inner['authorDisplayName']
+    video['recent_replied_to_comment_like_count'] = comment_inner['likeCount']
+    video['recent_replied_to_comment_reply_count'] = most_replied_to_comment['totalReplyCount']
+    t = str(parse_iso_datetime(comment_inner['publishedAt']))
+    video['recent_replied_to_comment_time'] = t
+
     return video
 
 def get_video_ids(url):
@@ -155,6 +165,9 @@ def get_most_recent_comments(video_id, count=100):
 def like_count(comment):
     return comment['snippet']['topLevelComment']['snippet']['likeCount']
 
+def reply_count(comment):
+    return comment['snippet']['totalReplyCount']
+
 def sort_comments_by_likes(comments):
     """
     From a list of comment, get the most liked one
@@ -173,7 +186,10 @@ def sort_comments_by_replies(comments):
     :param comments: A list of comments, from get_most_recent_comments
     :return: All data for the single most replied_to comment
     """
-    pass
+    unsorted_comments = comments['items']
+    return sorted(unsorted_comments,
+                  key=lambda c: reply_count(c),
+                  reverse=True)
 
 #Not in git, for obvious reasons
 def get_api_key(api_key_file=os.path.join(SECRETS_DIRECTORY,

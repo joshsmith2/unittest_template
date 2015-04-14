@@ -58,7 +58,7 @@ class CommentsTest(GeneralTest):
         with self.assertRaises(ValueError):
             public_api.get_most_recent_comments(self.green_id, 400)
 
-    def test_sorting_works(self):
+    def test_sorting_by_likes_works(self):
         response = public_api.get_most_recent_comments(self.leekspin_id, 20)
         sorted_comments = public_api.sort_comments_by_likes(response)
         like_count_to_lose_to = public_api.like_count(sorted_comments[0])
@@ -69,7 +69,16 @@ class CommentsTest(GeneralTest):
                             msg=message)
             like_count_to_lose_to = public_api.like_count(c)
 
-
+    def test_sorting_by_replies_works(self):
+        response = public_api.get_most_recent_comments(self.leekspin_id, 20)
+        sorted_comments = public_api.sort_comments_by_replies(response)
+        reply_count_to_lose_to = public_api.reply_count(sorted_comments[0])
+        for c in sorted_comments:
+            message = "{} not less than {}".format(public_api.reply_count(c),
+                                                   reply_count_to_lose_to)
+            self.assertTrue(public_api.reply_count(c) <= reply_count_to_lose_to,
+                            msg=message)
+            reply_count_to_lose_to = public_api.reply_count(c)
 
 if __name__ == '__main__':
      unittest.main()
